@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Formulário</title>
+</head>
+<body>
+  <h1>Formulário com Proteção CSRF</h1>
+  
+  <!-- Armazenar o token CSRF em um elemento oculto -->
+  <div id="csrf-token" data-token="<%= csrfToken %>"></div>
+  
+  <form id="csrf-form">
+    <label for="name">Nome:</label>
+    <input type="text" id="name" name="name">
+    <button type="submit">Enviar</button>
+  </form>
+  
+  <p> </p>
+  <a href="/">Voltar ao inicio</a>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      const csrfToken = document.getElementById('csrf-token').getAttribute('data-token');
+      localStorage.setItem('csrf_token', csrfToken);
+    });
+
+    document.getElementById('csrf-form').addEventListener('submit', function(event) {
+      event.preventDefault();
+
+      const storedCsrfToken = localStorage.getItem('csrf_token');
+      console.log("token enviado: ", storedCsrfToken);
+      const formData = new FormData(event.target);
+      
+
+      fetch('/process', {
+        method: 'POST',
+        headers: {
+          'CSRF-Token': storedCsrfToken,
+          'Accept': 'application/json'
+        },
+        body: formData
+      })
+      .then(response => {
+        if (!response.ok) {
+          throw new Error('Response was not ok');
+        }
+        return response.json();
+      })
+      .then(data => {
+        // alert('Formulário enviado com sucesso!');
+        console.log(data);
+      })
+      .catch(error => {
+        alert('Erro ao enviar o formulário.');
+        console.error('Houve um problema com a requisição:', error);
+      });
+    });
+  </script>
+</body>
+</html>
